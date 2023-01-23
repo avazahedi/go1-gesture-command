@@ -1,3 +1,8 @@
+This repository is a fork of [kinivi's hand-gesture-recognition-mediapipe repository](https://github.com/kinivi/hand-gesture-recognition-mediapipe).
+My modifications include adding new gestures and data to the existing model. The below README is from kinivi's original repository.
+
+<br>
+
 # hand-gesture-recognition-using-mediapipe
 Estimate hand pose using MediaPipe (Python version).<br> This is a sample 
 program that recognizes hand signs and finger gestures with a simple MLP using the detected key points.
