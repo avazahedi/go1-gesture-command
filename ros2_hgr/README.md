@@ -1,5 +1,7 @@
 This repository is a fork of [kinivi's hand-gesture-recognition-mediapipe repository](https://github.com/kinivi/hand-gesture-recognition-mediapipe).
-My modifications include adding new gestures and data to the existing model. The below README is from kinivi's original repository.
+My modifications include adding new gestures and data to the existing model. The below README is from kinivi's original repository.  
+
+Need to change path_prefix in hgr_node.py and keypoint_classification_EN.ipynb to get files to load properly.
 
 <br>
 

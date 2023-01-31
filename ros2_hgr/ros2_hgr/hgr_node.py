@@ -17,7 +17,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int32
 
-path_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/ros2_hgr/'
+path_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/go1_hgr_ros2/ros2_hgr/'
 
 class KeyPointClassifier(object):
     def __init__(
