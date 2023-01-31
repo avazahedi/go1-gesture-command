@@ -17,7 +17,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int32
 
-path_prefix = '/home/avaz/courses/w23/winter-project/other/ros2_hgr_ws/src/ros2_hgr/'
+path_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/ros2_hgr/'
 
 class KeyPointClassifier(object):
     def __init__(
@@ -147,14 +147,14 @@ class HGR(Node):
 
         Initialize publisher and timer.
         """
-        super().__init__('hgr')
+        super().__init__('hgr_node')
         self.frequency = 200
         self.period = 1/self.frequency
 
-        self.hgr_pub = self.create_publisher(Int32, "/hgr", 10)
+        self.hgr_pub = self.create_publisher(Int32, "/hgr_topic", 10)
         self.gesture = 0
         self.hgr_sign = Int32()
-        self.hgr_sign.data = -1
+        self.hgr_sign.data = -1     # -1 means no hand gesture detected
 
         #--------------------------------------------------------
         # Argument parsing #################################################################
