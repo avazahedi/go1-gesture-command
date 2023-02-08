@@ -1,0 +1,9 @@
+<launch>
+
+  <arg name="path_prefix" default="$(find-pkg-share ros2_hgr)/"/>
+
+  <node name="hgr_node" pkg="ros2_hgr" exec="hgr_node" >
+    <param name="path_prefix1" value="$(var path_prefix)" />
+  </node>
+
+</launch>

@@ -17,15 +17,16 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int32
 
-path_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/go1_hgr_ros2/ros2_hgr/'
+# path_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/go1_hgr_ros2/ros2_hgr/'
 
 class KeyPointClassifier(object):
     def __init__(
         self,
-        # model_path='model/keypoint_classifier/keypoint_classifier.tflite',
-        model_path=path_prefix+'model/keypoint_classifier/keypoint_classifier.tflite',
+        model_path_prefix,
         num_threads=1,
     ):
+        model_path=model_path_prefix+'model/keypoint_classifier/keypoint_classifier.tflite'
+
         self.interpreter = tf.lite.Interpreter(model_path=model_path,
                                                num_threads=num_threads)
 
@@ -55,12 +56,13 @@ class KeyPointClassifier(object):
 class PointHistoryClassifier(object):
     def __init__(
         self,
-        # model_path='model/point_history_classifier/point_history_classifier.tflite',
-        model_path=path_prefix+'model/point_history_classifier/point_history_classifier.tflite',
+        model_path_prefix,
         score_th=0.5,
         invalid_value=0,
         num_threads=1,
     ):
+        model_path=model_path_prefix+'model/point_history_classifier/point_history_classifier.tflite'
+
         self.interpreter = tf.lite.Interpreter(model_path=model_path,
                                                num_threads=num_threads)
 
@@ -91,7 +93,6 @@ class PointHistoryClassifier(object):
             result_index = self.invalid_value
 
         return result_index
-
 
 class CvFpsCalc(object):
     def __init__(self, buffer_len=1):
@@ -128,17 +129,17 @@ def get_args():
                         type=int,
                         default=0.5)
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     return args
 
 
 class HGR(Node):
     """
-    Detects and recognizes hand gestures to be published on <topic_name> topic.
+    Detects and recognizes hand gestures to be published on /hgr_topic topic.
 
     Publishers:
-    - self.twist_pub (Twist): publishes to /cmd_vel.
+    - self.hgr_pub (Int32): publishes to /hgr_topic.
     """
 
     def __init__(self):
@@ -150,6 +151,10 @@ class HGR(Node):
         super().__init__('hgr_node')
         self.frequency = 200
         self.period = 1/self.frequency
+
+        self.declare_parameter('path_prefix1', '')
+        self.path_prefix = self.get_parameter('path_prefix1').get_parameter_value().string_value
+        # self.path_prefix = path_prefix
 
         self.hgr_pub = self.create_publisher(Int32, "/hgr_topic", 10)
         self.gesture = 0
@@ -184,13 +189,13 @@ class HGR(Node):
             min_tracking_confidence=min_tracking_confidence,
         )
 
-        self.keypoint_classifier = KeyPointClassifier()
+        self.keypoint_classifier = KeyPointClassifier(model_path_prefix=self.path_prefix)
 
-        self.point_history_classifier = PointHistoryClassifier()
+        self.point_history_classifier = PointHistoryClassifier(model_path_prefix=self.path_prefix)
 
         # Read labels ###########################################################
         # with open('model/keypoint_classifier/keypoint_classifier_label.csv',
-        with open(path_prefix+'model/keypoint_classifier/keypoint_classifier_label.csv',
+        with open(self.path_prefix+'model/keypoint_classifier/keypoint_classifier_label.csv',
                 encoding='utf-8-sig') as f:
             self.keypoint_classifier_labels = csv.reader(f)
             self.keypoint_classifier_labels = [
@@ -198,7 +203,7 @@ class HGR(Node):
             ]
 
         # with open('model/point_history_classifier/point_history_classifier_label.csv',
-        with open(path_prefix+'model/point_history_classifier/point_history_classifier_label.csv',
+        with open(self.path_prefix+'model/point_history_classifier/point_history_classifier_label.csv',
                 encoding='utf-8-sig') as f:
             self.point_history_classifier_labels = csv.reader(f)
             self.point_history_classifier_labels = [
@@ -263,7 +268,7 @@ class HGR(Node):
                 debug_image, self.point_history)
                 # Write to the dataset file
                 logging_csv(number, self.mode, pre_processed_landmark_list,
-                            pre_processed_point_history_list)
+                            pre_processed_point_history_list, self.path_prefix)
 
                 # Hand sign classification
                 hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
@@ -406,7 +411,7 @@ def pre_process_point_history(image, point_history):
     return temp_point_history
 
 
-def logging_csv(number, mode, landmark_list, point_history_list):
+def logging_csv(number, mode, landmark_list, point_history_list, path_prefix):
     if mode == 0:
         pass
     if mode == 1 and (0 <= number <= 9):

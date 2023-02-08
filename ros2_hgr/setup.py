@@ -1,4 +1,6 @@
 from setuptools import setup
+import os
+from glob import glob
 
 package_name = 'ros2_hgr'
 
@@ -9,14 +11,16 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name, ['package.xml', 'launch/hgr.launch.xml']),
+        (os.path.join('share', package_name, 'model/keypoint_classifier'), glob('model/keypoint_classifier/*')),
+        (os.path.join('share', package_name, 'model/point_history_classifier'), glob('model/point_history_classifier/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='avaz',
     maintainer_email='AvaZahedi2023@u.northwestern.edu',
     description='TODO: Package description',
-    license='TODO: License declaration',
+    license='MIT',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
