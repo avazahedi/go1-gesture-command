@@ -6,4 +6,14 @@
     <param name="path_prefix1" value="$(var path_prefix)" />
   </node>
 
+  <node name="hgr_com" pkg="go1_cmd" exec="hgr_com" output="screen">
+  </node>
+
+  <!-- <node name="go1_com" pkg="ros2_hgr" exec="go1_com" output="screen">
+  </node> -->
+
+  <include file="$(find-pkg-share unitree_nav)/launch/unitree_nav.launch.py">
+    <arg name="use_rviz" value="false" />
+  </include>
+
 </launch>

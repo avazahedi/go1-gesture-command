@@ -7,6 +7,10 @@ import itertools
 from collections import Counter
 from collections import deque
 
+# hide TF logger messages for NVidia GPU libraries
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -18,6 +22,7 @@ from rclpy.node import Node
 from std_msgs.msg import Int32
 
 # path_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/go1_hgr_ros2/ros2_hgr/'
+logging_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/go1_hgr_ros2/ros2_hgr/'
 
 class KeyPointClassifier(object):
     def __init__(
@@ -151,6 +156,7 @@ class HGR(Node):
         super().__init__('hgr_node')
         self.frequency = 200
         self.period = 1/self.frequency
+        self.count = 0
 
         self.declare_parameter('path_prefix1', '')
         self.path_prefix = self.get_parameter('path_prefix1').get_parameter_value().string_value
@@ -161,7 +167,6 @@ class HGR(Node):
         self.hgr_sign = Int32()
         self.hgr_sign.data = -1     # -1 means no hand gesture detected
 
-        #--------------------------------------------------------
         # Argument parsing #################################################################
         args = get_args()
 
@@ -272,8 +277,8 @@ class HGR(Node):
 
                 # Hand sign classification
                 hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
-                # if hand_sign_id == "N/A":  # Point gesture  # AVA: changed from 2 to "N/A"
-                if hand_sign_id == 2:
+                # if hand_sign_id == 2:  # Point gesture  # AVA: changed from 2 to "N/A"
+                if hand_sign_id == "N/A":
                     self.point_history.append(landmark_list[8])
                 else:
                     self.point_history.append([0, 0])
@@ -312,6 +317,9 @@ class HGR(Node):
 
         self.hgr_sign.data = int(hand_sign_id)
         self.hgr_pub.publish(self.hgr_sign)
+        # if self.count%10 == 0:
+        #     self.hgr_pub.publish(self.hgr_sign)
+        self.count += 1
 
 
 def select_mode(key, mode):
@@ -416,13 +424,13 @@ def logging_csv(number, mode, landmark_list, point_history_list, path_prefix):
         pass
     if mode == 1 and (0 <= number <= 9):
         # csv_path = 'model/keypoint_classifier/keypoint.csv'
-        csv_path = path_prefix+'model/keypoint_classifier/keypoint.csv'
+        csv_path = logging_prefix+'model/keypoint_classifier/keypoint.csv'
         with open(csv_path, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([number, *landmark_list])
     if mode == 2 and (0 <= number <= 9):
         # csv_path = 'model/point_history_classifier/point_history.csv'
-        csv_path = path_prefix+'model/point_history_classifier/point_history.csv'
+        csv_path = logging_prefix+'model/point_history_classifier/point_history.csv'
         with open(csv_path, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([number, *point_history_list])
