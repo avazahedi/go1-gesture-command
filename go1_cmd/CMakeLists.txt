@@ -14,6 +14,7 @@ find_package(unitree_legged_real REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(unitree_nav REQUIRED)
+find_package(unitree_nav_interfaces REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
@@ -24,6 +25,7 @@ ament_target_dependencies(
   ros2_unitree_legged_msgs
   std_msgs
   unitree_nav
+  unitree_nav_interfaces
   std_srvs
   geometry_msgs)
 
