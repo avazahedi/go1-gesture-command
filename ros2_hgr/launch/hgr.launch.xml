@@ -1,15 +1,27 @@
 <launch>
 
   <arg name="path_prefix" default="$(find-pkg-share ros2_hgr)/"/>
+  <arg name="use_realsense" default="false" />
 
-  <node name="hgr_node" pkg="ros2_hgr" exec="hgr_node" >
+  <!-- <node name="usb_cam_node" pkg="usb_cam" exec="usb_cam_node_exe" >
+    <remap from="/image/raw" to="/head/front/cam/image_rect/left" />
+  </node> -->
+
+  <include file="$(find-pkg-share realsense2_camera)/launch/rs_launch.py">
+  </include>
+
+  <node name="hgr_node_cam" pkg="ros2_hgr" exec="hgr_node_cam" if="$(eval '\'$(var use_realsense)\' == \'true\'')">
+    <param name="path_prefix1" value="$(var path_prefix)" />
+  </node>
+
+  <node name="hgr_node" pkg="ros2_hgr" exec="hgr_node" if="$(eval '\'$(var use_realsense)\' == \'false\'')">
     <param name="path_prefix1" value="$(var path_prefix)" />
   </node>
 
   <node name="hgr_com" pkg="go1_cmd" exec="hgr_com" output="screen">
   </node>
 
-  <include file="$(find-pkg-share unitree_nav)/launch/unitree_nav.launch.py">
+  <include file="$(find-pkg-share unitree_nav)/launch/control.launch.py">
     <arg name="use_rviz" value="false" />
   </include>
 
