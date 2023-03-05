@@ -158,7 +158,7 @@ class HGR(Node):
         Initialize publisher and timer.
         """
         super().__init__('hgr_node')
-        self.frequency = 50 # 200
+        self.frequency = 100 # 200
         self.period = 1/self.frequency
         self.count = 0
 
@@ -174,8 +174,6 @@ class HGR(Node):
         self.bridge = CvBridge()
         # self.left_img_sub = self.create_subscription(Image, '/head/front/cam/image_rect/left', self.imgL_callback, 10)
         # self.right_img_sub = self.create_subscription(Image, '/head/front/cam/image_rect/right', self.imgR_callback, 10)
-
-        # self.left_img_sub = self.create_subscription(Image, '/image_raw', self.imgL_callback, 10)
 
         # self.left_img_sub = self.create_subscription(Image, 'image_rect/left', self.imgL_callback, 10)
         # self.right_img_sub = self.create_subscription(Image, 'image_rect/right', self.imgR_callback, 10)
@@ -202,6 +200,21 @@ class HGR(Node):
         self.cap = cv.VideoCapture(cap_device)
         self.cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
         self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+
+        # #### Pyrealsense2 ####
+        # # Initiating realsense pipeline
+        # self.pipeline = rs.pipeline()
+        # self.config = rs.config()
+        # self.pipeline_wrapper = rs.pipeline_wrapper(self.pipeline)
+        # self.pipeline_profile = self.config.resolve(self.pipeline_wrapper)
+        # self.device = self.pipeline_profile.get_device()
+
+        # # Enabling color camera streaming at 30 fps and same specs(480x270x30)
+        # self.config.enable_stream(rs.stream.color, 480, 270, rs.format.bgr8, 30)
+        # # Start streaming
+        # # self.profile = self.pipeline.start(self.config)
+        # self.profile = self.pipeline.start()
+        # ######################
 
         # Model load #############################################################
         mp_hands = mp.solutions.hands
@@ -246,14 +259,13 @@ class HGR(Node):
         #  ########################################################################
         self.mode = 0
 
-        # CREATE TIMER
+        # CREATE TIMER (for Pyrealsense2)
         # self.tmr = self.create_timer(self.period, self.timer_callback)
 
     def rs_callback(self, data):
-        self.get_logger().info("In RS Callback")
         self.image = self.bridge.imgmsg_to_cv2(data)
         self.image = cv.flip(self.image, 1)  # Mirror display
-        self.image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
+        # self.image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
         self.debug_image = copy.deepcopy(self.image)
         cv.waitKey(1)
         ##########
@@ -272,12 +284,10 @@ class HGR(Node):
 
             image.flags.writeable = False
             results = self.hands.process(image)
-            # self.get_logger().info(f"results: {results.multi_hand_landmarks}")
             image.flags.writeable = True
 
             #  ####################################################################
             if results.multi_hand_landmarks is not None:
-                self.get_logger().info("detecting hands")
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
                                                     results.multi_handedness):
                     # Bounding box calculation
@@ -332,11 +342,13 @@ class HGR(Node):
             debug_image = draw_info(debug_image, fps, self.mode, number)
 
             # Screen reflection #############################################################
+            debug_image = cv.cvtColor(debug_image, cv.COLOR_BGR2RGB)
             cv.imshow('Hand Gesture Recognition', debug_image)
 
             self.hgr_sign.data = int(hand_sign_id)
             self.hgr_pub.publish(self.hgr_sign)
 
+'''
     def imgL_callback(self, data):
         # self.get_logger().info("Inside left/rect callback")
         self.left_image = self.bridge.imgmsg_to_cv2(data)
@@ -371,10 +383,8 @@ class HGR(Node):
         results = self.hands.process(image)
         image.flags.writeable = True
 
-        self.get_logger().info("OUT HEREEEEEE")
         #  ####################################################################
         if results.multi_hand_landmarks is not None:
-            self.get_logger().info("IN HEREEEEEE")
             for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
                                                 results.multi_handedness):
                 # Bounding box calculation
@@ -442,7 +452,17 @@ class HGR(Node):
     def timer_callback(self):
         # self.get_logger("in timer callback")
 
-        self.get_logger().info(f"self.image\n {self.image}\n")
+        # self.get_logger().info(f"self.image\n {self.image}\n")
+
+        # #### Pyrealsense2 ####
+        # frame = self.pipeline.wait_for_frames()
+        # self.image = frame.get_color_frame()
+        # self.image = np.asanyarray(self.image.get_data())
+        # self.image = cv.flip(self.image, 1)  # Mirror display
+        # self.image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
+        # self.debug_image = copy.deepcopy(self.image)
+        # ######################
+
 
         fps = self.cvFpsCalc.get()
 
@@ -526,7 +546,7 @@ class HGR(Node):
             # if self.count%10 == 0:
             #     self.hgr_pub.publish(self.hgr_sign)
             # self.count += 1
-
+'''
 
 def select_mode(key, mode):
     number = -1

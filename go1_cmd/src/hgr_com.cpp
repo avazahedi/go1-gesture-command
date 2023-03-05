@@ -1,10 +1,4 @@
 #include "rclcpp/rclcpp.hpp"
-// #include "ros2_unitree_legged_msgs/msg/high_cmd.hpp"
-// #include "ros2_unitree_legged_msgs/msg/high_state.hpp"
-// #include "ros2_unitree_legged_msgs/msg/low_cmd.hpp"
-// #include "ros2_unitree_legged_msgs/msg/low_state.hpp"
-// #include "unitree_legged_sdk/unitree_legged_sdk.h"
-// #include "convert.h"
 #include "std_msgs/msg/int32.hpp"
 #include <stdio.h>
 #include "std_srvs/srv/empty.hpp"
@@ -20,7 +14,7 @@ enum class HGRCode : uint8_t
     ,close = 1
     ,pointer = 2
     ,ok = 3
-    // ,peace = 4
+    ,peace = 4
     ,thumbs_up = 5
     ,thumbs_down = 6
     ,quiet_coyote = 7
@@ -51,9 +45,6 @@ class HGRCom : public rclcpp::Node
     HGRCom()
     : Node("hgr_com")
     {
-      // high_cmd publisher
-      // cmd_pub_ = create_publisher<ros2_unitree_legged_msgs::msg::HighCmd>("high_cmd", 10);
-
       //Publishers
       cmd_vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
@@ -80,13 +71,13 @@ class HGRCom : public rclcpp::Node
     }
 
   private:
+
+    /// @brief Continuously running timer callback for sending commands to the Go1.
     void timer_callback()
     {
       geometry_msgs::msg::Twist cmdvel_msg;
-      // RCLCPP_INFO_STREAM(get_logger(), "srv_call_flag: " << srv_call_flag);
-      // RCLCPP_INFO_STREAM(get_logger(), "hgr_code: " << static_cast<int>(hgr_code));
 
-      if (laydown_flag == 1)
+      if (laydown_flag == 1)    // if the Go1 is laying down, need to stand up before doing anything else
       {
         if (hgr_code == HGRCode::pointer)
         {
@@ -96,13 +87,12 @@ class HGRCom : public rclcpp::Node
         }
       }
 
-      else{
+      else {
         switch (hgr_code)
         {
-          case HGRCode::no_data:
+          case HGRCode::no_data:  // Go1 should not move
           {
             srv_call_flag = 0;
-            // tell the Go1 to stop moving (for now)
             cmdvel_msg.linear.x = 0.0;
             cmdvel_msg.linear.y = 0.0;
             cmdvel_msg.angular.z = 0.0;
@@ -119,49 +109,38 @@ class HGRCom : public rclcpp::Node
           }
           case HGRCode::close: // tell the Go1 to go back to normal orientation
           {
-            if (srv_call_flag == 0)
-            {
-              auto request = std::make_shared<unitree_nav_interfaces::srv::SetBodyRPY::Request>();
-              request->roll = 0.0;
-              request->pitch = 0.0;
-              request->yaw = 0.0;
-              auto result = setbodyrpy_client->async_send_request(request);
-              // srv_call_flag = 1;
-            }
+            auto request = std::make_shared<unitree_nav_interfaces::srv::SetBodyRPY::Request>();
+            request->roll = 0.0;
+            request->pitch = 0.0;
+            request->yaw = 0.0;
+            auto result = setbodyrpy_client->async_send_request(request);
             break;
           }
           case HGRCode::pointer: // tell the Go1 to stand up
           {
-            if (srv_call_flag == 0)
-            {
-              auto request = std::make_shared<std_srvs::srv::Empty::Request>();
-              auto result = recoverstand_client->async_send_request(request);
-              // srv_call_flag = 1;
-            }
+            auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+            auto result = recoverstand_client->async_send_request(request);
             break;
           }
-          case HGRCode::ok:
+          case HGRCode::ok:     // tell the Go1 to tilt back
           {
-            if (srv_call_flag == 0)
-            {
-              auto request = std::make_shared<unitree_nav_interfaces::srv::SetBodyRPY::Request>();
-              request->roll = 0.0;
-              request->pitch = -0.6;
-              request->yaw = 0.0;
-              auto result = setbodyrpy_client->async_send_request(request);
-              // while (result.wait_for(1s) != std::future_status::ready) 
-              // {
-              //   RCLCPP_INFO_STREAM(get_logger(), "AHHHAHDSUAHDUAHSFDHJJSDHF");
-              // } // wait for future to finish !!! this does not work !!!
-              // RCLCPP_INFO_STREAM(get_logger(), "SetBodyRPY future complete");
-              // auto result_future = setbodyrpy_client->async_send_request(
-              //       request, std::bind(&HGRCom::response_callback, this,
-              //                         std::placeholders::_1));
-              // srv_call_flag = 1;
-            }
+            auto request = std::make_shared<unitree_nav_interfaces::srv::SetBodyRPY::Request>();
+            request->roll = 0.0;
+            request->pitch = -0.6;
+            request->yaw = 0.0;
+            auto result = setbodyrpy_client->async_send_request(request);
             break;
           }
-          case HGRCode::thumbs_up:
+          case HGRCode::peace:  // tell the Go1 to tilt forward
+          {
+            auto request = std::make_shared<unitree_nav_interfaces::srv::SetBodyRPY::Request>();
+            request->roll = 0.0;
+            request->pitch = 0.3;
+            request->yaw = 0.0;
+            auto result = setbodyrpy_client->async_send_request(request);
+            break;
+          }
+          case HGRCode::thumbs_up:    // tell the Go1 to walk forward
           {
             cmdvel_msg.linear.x = 0.3;
             cmdvel_msg.linear.y = 0.0;
@@ -169,7 +148,7 @@ class HGRCom : public rclcpp::Node
             cmd_vel_pub_->publish(cmdvel_msg);
             break;
           }
-          case HGRCode::thumbs_down:
+          case HGRCode::thumbs_down:  // tell the Go1 to walk backward
           {
             cmdvel_msg.linear.x = -0.3;
             cmdvel_msg.linear.y = 0.0;
@@ -177,34 +156,11 @@ class HGRCom : public rclcpp::Node
             cmd_vel_pub_->publish(cmdvel_msg);
             break;
           }
-          case HGRCode::quiet_coyote:
+          case HGRCode::quiet_coyote:   // tell the Go1 to lay down
           {
-            if (srv_call_flag == 0)
-            {
-              // while (!laydown_client->wait_for_service(1s)) {
-              //   if (rclcpp::ok()) {
-              //     RCLCPP_ERROR(
-              //         this->get_logger(),
-              //         "Client interrupted while waiting for service. Terminating...");
-              //     return;
-              //   }
-              //   RCLCPP_INFO(this->get_logger(),
-              //               "Service Unavailable. Waiting for Service...");
-              // }
-
-              // auto request = std::make_shared<std_srvs::srv::Empty::Request>();
-
-              // RCLCPP_INFO_STREAM(get_logger(), "BEFORE CALL");
-              // auto result_future = laydown_client->async_send_request(
-              //     request, std::bind(&HGRCom::response_callback, this,
-              //                       std::placeholders::_1));
-              // RCLCPP_INFO_STREAM(get_logger(), "AFTER CALL");
-
-              auto request = std::make_shared<std_srvs::srv::Empty::Request>();
-              auto result = laydown_client->async_send_request(request);
-              laydown_flag = 1;
-            }
-
+            auto request = std::make_shared<std_srvs::srv::Empty::Request>();
+            auto result = laydown_client->async_send_request(request);
+            laydown_flag = 1;
             break;
           }
         }
@@ -212,16 +168,8 @@ class HGRCom : public rclcpp::Node
 
     }
 
-    // void response_callback(
-    //   rclcpp::Client<std_srvs::srv::Empty>::SharedFuture future) {
-    //   auto status = future.wait_for(1s);
-    //   if (status == std::future_status::ready) {
-    //     RCLCPP_INFO(this->get_logger(), "Result: success");
-    //   } else {
-    //     RCLCPP_INFO(this->get_logger(), "Service In-Progress...");
-    //   }
-    // }
-
+    /// @brief Subscription callback to receive hand gesture recognition data.
+    /// @param msg - HGR data
     void hgr_callback(const std_msgs::msg::Int32 & msg)
     {
         if (msg.data == -1)

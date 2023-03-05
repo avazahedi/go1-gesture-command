@@ -313,6 +313,7 @@ class HGR(Node):
         debug_image = draw_info(debug_image, fps, self.mode, number)
 
         # Screen reflection #############################################################
+        # debug_image = cv.cvtColor(debug_image, cv.COLOR_BGR2RGB)
         cv.imshow('Hand Gesture Recognition', debug_image)
 
         self.hgr_sign.data = int(hand_sign_id)
