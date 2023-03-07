@@ -21,7 +21,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int32
 
-# path_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/go1_hgr_ros2/ros2_hgr/'
+# need absolute path of package location for logging new data to train
 logging_prefix = '/home/avaz/courses/w23/winter-project/hgr_go1_ws/src/go1_hgr_ros2/ros2_hgr/'
 
 class KeyPointClassifier(object):
@@ -160,12 +160,13 @@ class HGR(Node):
 
         self.declare_parameter('path_prefix1', '')
         self.path_prefix = self.get_parameter('path_prefix1').get_parameter_value().string_value
-        # self.path_prefix = path_prefix
 
         self.hgr_pub = self.create_publisher(Int32, "/hgr_topic", 10)
         self.gesture = 0
         self.hgr_sign = Int32()
         self.hgr_sign.data = -1     # -1 means no hand gesture detected
+
+        self.mode = 0
 
         # Argument parsing #################################################################
         args = get_args()
@@ -199,7 +200,6 @@ class HGR(Node):
         self.point_history_classifier = PointHistoryClassifier(model_path_prefix=self.path_prefix)
 
         # Read labels ###########################################################
-        # with open('model/keypoint_classifier/keypoint_classifier_label.csv',
         with open(self.path_prefix+'model/keypoint_classifier/keypoint_classifier_label.csv',
                 encoding='utf-8-sig') as f:
             self.keypoint_classifier_labels = csv.reader(f)
@@ -207,7 +207,6 @@ class HGR(Node):
                 row[0] for row in self.keypoint_classifier_labels
             ]
 
-        # with open('model/point_history_classifier/point_history_classifier_label.csv',
         with open(self.path_prefix+'model/point_history_classifier/point_history_classifier_label.csv',
                 encoding='utf-8-sig') as f:
             self.point_history_classifier_labels = csv.reader(f)
@@ -224,9 +223,6 @@ class HGR(Node):
 
         # Finger gesture history ################################################
         self.finger_gesture_history = deque(maxlen=self.history_length)
-
-        #  ########################################################################
-        self.mode = 0
 
         # CREATE TIMER
         self.tmr = self.create_timer(self.period, self.timer_callback)
@@ -313,7 +309,6 @@ class HGR(Node):
         debug_image = draw_info(debug_image, fps, self.mode, number)
 
         # Screen reflection #############################################################
-        # debug_image = cv.cvtColor(debug_image, cv.COLOR_BGR2RGB)
         cv.imshow('Hand Gesture Recognition', debug_image)
 
         self.hgr_sign.data = int(hand_sign_id)

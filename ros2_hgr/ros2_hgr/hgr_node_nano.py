@@ -19,7 +19,8 @@ from tensorflow import keras
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, String
+from enum import Enum
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
@@ -143,6 +144,24 @@ def get_args():
     return args
 
 
+class HGRCode(Enum):
+    """
+    These are the 8 possible HGR codes of the system.
+
+    It determines what the main timer function and other callback functions should be doing
+    on each iteration in the correct order.
+    """
+
+    no_data = 99
+    open = 0
+    close = 1
+    pointer = 2
+    ok = 3
+    peace = 4
+    thumbs_up = 5
+    thumbs_down = 6
+    quiet_coyote = 7
+
 class HGR(Node):
     """
     Detects and recognizes hand gestures to be published on /hgr_topic topic.
@@ -171,12 +190,9 @@ class HGR(Node):
         self.hgr_sign = Int32()
         self.hgr_sign.data = -1     # -1 means no hand gesture detected
 
-        self.bridge = CvBridge()
-        # self.left_img_sub = self.create_subscription(Image, '/head/front/cam/image_rect/left', self.imgL_callback, 10)
-        # self.right_img_sub = self.create_subscription(Image, '/head/front/cam/image_rect/right', self.imgR_callback, 10)
+        self.hgr_label_pub = self.create_publisher(String, "/hgr_label", 10)
 
-        # self.left_img_sub = self.create_subscription(Image, 'image_rect/left', self.imgL_callback, 10)
-        # self.right_img_sub = self.create_subscription(Image, 'image_rect/right', self.imgR_callback, 10)
+        self.bridge = CvBridge()
 
         # RealSense image
         self.rs_sub = self.create_subscription(Image, '/camera/color/image_raw', self.rs_callback, 10)
@@ -200,21 +216,6 @@ class HGR(Node):
         self.cap = cv.VideoCapture(cap_device)
         self.cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
         self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
-
-        # #### Pyrealsense2 ####
-        # # Initiating realsense pipeline
-        # self.pipeline = rs.pipeline()
-        # self.config = rs.config()
-        # self.pipeline_wrapper = rs.pipeline_wrapper(self.pipeline)
-        # self.pipeline_profile = self.config.resolve(self.pipeline_wrapper)
-        # self.device = self.pipeline_profile.get_device()
-
-        # # Enabling color camera streaming at 30 fps and same specs(480x270x30)
-        # self.config.enable_stream(rs.stream.color, 480, 270, rs.format.bgr8, 30)
-        # # Start streaming
-        # # self.profile = self.pipeline.start(self.config)
-        # self.profile = self.pipeline.start()
-        # ######################
 
         # Model load #############################################################
         mp_hands = mp.solutions.hands
@@ -258,9 +259,6 @@ class HGR(Node):
 
         #  ########################################################################
         self.mode = 0
-
-        # CREATE TIMER (for Pyrealsense2)
-        # self.tmr = self.create_timer(self.period, self.timer_callback)
 
     def rs_callback(self, data):
         self.image = self.bridge.imgmsg_to_cv2(data)
@@ -347,206 +345,13 @@ class HGR(Node):
 
             self.hgr_sign.data = int(hand_sign_id)
             self.hgr_pub.publish(self.hgr_sign)
+            self.hgr_label = String()
 
-'''
-    def imgL_callback(self, data):
-        # self.get_logger().info("Inside left/rect callback")
-        self.left_image = self.bridge.imgmsg_to_cv2(data)
-        self.image = self.bridge.imgmsg_to_cv2(data)
-        # self.get_logger().info(f"self.image is none? {self.image}")
-        image = self.image
-        # cv.imshow("camera", self.image)
-        cv.waitKey(1)
-
-        fps = self.cvFpsCalc.get()
-
-        # Process Key (ESC: end) #################################################
-        key = cv.waitKey(10)
-        if key == 27:  # ESC
-            self.cap.release()
-            cv.destroyAllWindows()
-        number, self.mode = select_mode(key, self.mode)
-
-        # Camera capture #####################################################
-        # ret, image = self.cap.read()
-        # if not ret:
-        #     self.cap.release()
-        #     cv.destroyAllWindows()
-
-        image = cv.flip(image, 1)  # Mirror display
-
-        # # Detection implementation #############################################################
-        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-        debug_image = copy.deepcopy(image)
-
-        image.flags.writeable = False
-        results = self.hands.process(image)
-        image.flags.writeable = True
-
-        #  ####################################################################
-        if results.multi_hand_landmarks is not None:
-            for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
-                                                results.multi_handedness):
-                # Bounding box calculation
-                brect = calc_bounding_rect(debug_image, hand_landmarks)
-                # Landmark calculation
-                landmark_list = calc_landmark_list(debug_image, hand_landmarks)
-
-                # Conversion to relative coordinates / normalized coordinates
-                pre_processed_landmark_list = pre_process_landmark(
-                    landmark_list)
-                pre_processed_point_history_list = pre_process_point_history(
-                debug_image, self.point_history)
-                # Write to the dataset file
-                logging_csv(number, self.mode, pre_processed_landmark_list,
-                            pre_processed_point_history_list, self.path_prefix)
-
-                # Hand sign classification
-                hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
-                # if hand_sign_id == "N/A":  # Point gesture  # AVA: changed from 2 to "N/A"
-                if hand_sign_id == 2:
-                    self.point_history.append(landmark_list[8])
-                else:
-                    self.point_history.append([0, 0])
-
-                # Finger gesture classification
-                finger_gesture_id = 0
-                point_history_len = len(pre_processed_point_history_list)
-                if point_history_len == (self.history_length * 2):
-                    finger_gesture_id = self.point_history_classifier(
-                        pre_processed_point_history_list)
-
-                # Calculates the gesture IDs in the latest detection
-                self.finger_gesture_history.append(finger_gesture_id)
-                most_common_fg_id = Counter(
-                    self.finger_gesture_history).most_common()
-
-                # Drawing part
-                debug_image = draw_bounding_rect(self.use_brect, debug_image, brect)
-                debug_image = draw_landmarks(debug_image, landmark_list)
-                debug_image = draw_info_text(
-                    debug_image,
-                    brect,
-                    handedness,
-                    self.keypoint_classifier_labels[hand_sign_id],
-                    self.point_history_classifier_labels[most_common_fg_id[0][0]],
-                )
-        else:
-            self.point_history.append([0, 0])
-            hand_sign_id = -1
-
-        debug_image = draw_point_history(debug_image, self.point_history)
-        debug_image = draw_info(debug_image, fps, self.mode, number)
-
-        cv.imshow('Hand Gesture Recognition', debug_image)
-
-        self.hgr_sign.data = int(hand_sign_id)
-        self.hgr_pub.publish(self.hgr_sign)
-
-
-    def imgR_callback(self, data):
-        self.right_image = self.bridge.imgmsg_to_cv2(data)
-        cv.waitKey(1)
-
-
-    def timer_callback(self):
-        # self.get_logger("in timer callback")
-
-        # self.get_logger().info(f"self.image\n {self.image}\n")
-
-        # #### Pyrealsense2 ####
-        # frame = self.pipeline.wait_for_frames()
-        # self.image = frame.get_color_frame()
-        # self.image = np.asanyarray(self.image.get_data())
-        # self.image = cv.flip(self.image, 1)  # Mirror display
-        # self.image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
-        # self.debug_image = copy.deepcopy(self.image)
-        # ######################
-
-
-        fps = self.cvFpsCalc.get()
-
-        # Process Key (ESC: end) #################################################
-        key = cv.waitKey(10)
-        if key == 27:  # ESC
-            self.cap.release()
-            cv.destroyAllWindows()
-        number, self.mode = select_mode(key, self.mode)
-        
-        if self.image is not None:
-            image = self.image
-            debug_image = self.debug_image
-
-            image.flags.writeable = False
-            results = self.hands.process(image)
-            # self.get_logger().info(f"results: {results.multi_hand_landmarks}")
-            image.flags.writeable = True
-
-            #  ####################################################################
-            if results.multi_hand_landmarks is not None:
-                self.get_logger().info("detecting hands")
-                for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
-                                                    results.multi_handedness):
-                    # Bounding box calculation
-                    brect = calc_bounding_rect(debug_image, hand_landmarks)
-                    # Landmark calculation
-                    landmark_list = calc_landmark_list(debug_image, hand_landmarks)
-
-                    # Conversion to relative coordinates / normalized coordinates
-                    pre_processed_landmark_list = pre_process_landmark(
-                        landmark_list)
-                    pre_processed_point_history_list = pre_process_point_history(
-                    debug_image, self.point_history)
-                    # Write to the dataset file
-                    logging_csv(number, self.mode, pre_processed_landmark_list,
-                                pre_processed_point_history_list, self.path_prefix)
-
-                    # Hand sign classification
-                    hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
-                    if hand_sign_id == "N/A":  # Point gesture  # AVA: changed from 2 to "N/A"
-                    # if hand_sign_id == 2:
-                        self.point_history.append(landmark_list[8])
-                    else:
-                        self.point_history.append([0, 0])
-
-                    # Finger gesture classification
-                    finger_gesture_id = 0
-                    point_history_len = len(pre_processed_point_history_list)
-                    if point_history_len == (self.history_length * 2):
-                        finger_gesture_id = self.point_history_classifier(
-                            pre_processed_point_history_list)
-
-                    # Calculates the gesture IDs in the latest detection
-                    self.finger_gesture_history.append(finger_gesture_id)
-                    most_common_fg_id = Counter(
-                        self.finger_gesture_history).most_common()
-
-                    # Drawing part
-                    debug_image = draw_bounding_rect(self.use_brect, debug_image, brect)
-                    debug_image = draw_landmarks(debug_image, landmark_list)
-                    debug_image = draw_info_text(
-                        debug_image,
-                        brect,
-                        handedness,
-                        self.keypoint_classifier_labels[hand_sign_id],
-                        self.point_history_classifier_labels[most_common_fg_id[0][0]],
-                    )
+            if hand_sign_id == -1:
+                self.hgr_label.data = str(HGRCode(99))
             else:
-                self.point_history.append([0, 0])
-                hand_sign_id = -1
-
-            debug_image = draw_point_history(debug_image, self.point_history)
-            debug_image = draw_info(debug_image, fps, self.mode, number)
-
-            # Screen reflection #############################################################
-            cv.imshow('Hand Gesture Recognition', debug_image)
-
-            self.hgr_sign.data = int(hand_sign_id)
-            self.hgr_pub.publish(self.hgr_sign)
-            # if self.count%10 == 0:
-            #     self.hgr_pub.publish(self.hgr_sign)
-            # self.count += 1
-'''
+                self.hgr_label.data = str(HGRCode(hand_sign_id))
+            self.hgr_label_pub.publish(self.hgr_label)
 
 def select_mode(key, mode):
     number = -1
