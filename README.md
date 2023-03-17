@@ -34,5 +34,7 @@ To launch using an external RealSense camera instead of a built-in webcam, use
 6. Thumbs Down - walk backward
 7. Quiet Coyote - lay down
 
+https://user-images.githubusercontent.com/39091881/226063735-aaa51c78-5556-4b36-a2dd-72c2382e86d3.mp4
+
 ## Notes
 If you wish to do additional data training and logging, you will have to change the path in line 25 of hgr_node.py or line 29 of hgr_node_cam.py, depending on if you are using the built-in webcam or RealSense, respectively. 
