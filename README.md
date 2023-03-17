@@ -26,10 +26,10 @@ To launch using an external RealSense camera instead of a built-in webcam, use
 
 ## Gestures Guide
 0. Open - stop
-1. Close - 0&deg; yaw orietnation
+1. Close - 0&deg; yaw orietnation (normal)
 2. Pointer - recover stand up
-3. OK - bow backwards
-4. Peace - bow forwards
+3. OK - look up
+4. Peace - look down
 5. Thumbs Up - walk forward
 6. Thumbs Down - walk backward
 7. Quiet Coyote - lay down
