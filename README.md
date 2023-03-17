@@ -6,6 +6,8 @@ This repository contains two ROS2 packages for using hand gestures to send motio
 - go1_cmd
     * A ROS2 C++ package that receives hand gesture data and utilizes services to send commands to the Go1 accordingly. 
 
+https://user-images.githubusercontent.com/39091881/226065629-1f51c5ee-e34e-41f8-ba0c-dff40174ed21.mp4
+
 ## Dependencies
 You can import the necessary repositories listed in `go1_hgr.repos` into your workspace using vcs. To do so, clone this repository into the src directory of your workspace. Then in the root of your workspace, run the following:  
 `vcs import < src/go1-gesture-command/go1_hgr.repos`  
