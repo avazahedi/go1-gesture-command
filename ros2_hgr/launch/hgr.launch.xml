@@ -2,11 +2,6 @@
 
   <arg name="path_prefix" default="$(find-pkg-share ros2_hgr)/"/>
   <arg name="use_realsense" default="false" />
-  <arg name="nano" default="false" />
-
-  <!-- <node name="usb_cam_node" pkg="usb_cam" exec="usb_cam_node_exe" >
-    <remap from="/image/raw" to="/head/front/cam/image_rect/left" />
-  </node> -->
 
   <include file="$(find-pkg-share realsense2_camera)/launch/rs_launch.py" if="$(eval '\'$(var use_realsense)\' == \'true\'')">
     <arg name="enable_depth" value="false" />
@@ -16,15 +11,11 @@
     <arg name="rgb_camera.profile" value="640x480x60" />
   </include>
 
-  <node name="hgr_node_cam" pkg="ros2_hgr" exec="hgr_node_cam" if="$(eval '\'$(var use_realsense)\' == \'true\' and \'$(var nano)\' == \'false\'')">
+  <node name="hgr_node_cam" pkg="ros2_hgr" exec="hgr_node_cam" if="$(eval '\'$(var use_realsense)\'')">
     <param name="path_prefix1" value="$(var path_prefix)" />
   </node>
 
   <node name="hgr_node" pkg="ros2_hgr" exec="hgr_node" if="$(eval '\'$(var use_realsense)\' == \'false\'')">
-    <param name="path_prefix1" value="$(var path_prefix)" />
-  </node>
-
-  <node name="hgr_node_nano" pkg="ros2_hgr" exec="hgr_node_nano" if="$(eval '\'$(var use_realsense)\' == \'true\' and \'$(var nano)\' == \'true\'')">
     <param name="path_prefix1" value="$(var path_prefix)" />
   </node>
 

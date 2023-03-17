@@ -313,8 +313,6 @@ class HGR(Node):
 
         self.hgr_sign.data = int(hand_sign_id)
         self.hgr_pub.publish(self.hgr_sign)
-        # if self.count%10 == 0:
-        #     self.hgr_pub.publish(self.hgr_sign)
         self.count += 1
 
 

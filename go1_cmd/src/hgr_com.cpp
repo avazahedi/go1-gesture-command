@@ -20,25 +20,6 @@ enum class HGRCode : uint8_t
     ,quiet_coyote = 7
 };
 
-// enum class Go1Mode : uint8_t
-// {
-//    idle = 0
-//   ,force_stand = 1
-//   ,target_velocity_walking = 2
-//   ,target_position_walking = 3
-//   ,path_walking = 4
-//   ,position_stand_down = 5
-//   ,position_stand_up = 6
-//   ,damping = 7
-//   ,recovery_stand = 8
-//   ,backflip = 9
-//   ,jump_yaw = 10
-//   ,straight_hand = 11
-//   ,dance1 = 12
-//   ,dance2 = 13
-// };
-
-
 class HGRCom : public rclcpp::Node
 {
   public:

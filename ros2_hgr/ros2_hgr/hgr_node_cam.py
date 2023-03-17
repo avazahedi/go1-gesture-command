@@ -172,12 +172,7 @@ class HGR(Node):
         self.hgr_sign.data = -1     # -1 means no hand gesture detected
 
         self.bridge = CvBridge()
-        # self.left_img_sub = self.create_subscription(Image, '/head/front/cam/image_rect/left', self.imgL_callback, 10)
-        # self.right_img_sub = self.create_subscription(Image, '/head/front/cam/image_rect/right', self.imgR_callback, 10)
-
-        # self.left_img_sub = self.create_subscription(Image, 'image_rect/left', self.imgL_callback, 10)
-        # self.right_img_sub = self.create_subscription(Image, 'image_rect/right', self.imgR_callback, 10)
-
+        
         # RealSense image
         self.rs_sub = self.create_subscription(Image, '/camera/color/image_raw', self.rs_callback, 10)
 
