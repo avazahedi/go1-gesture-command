@@ -19,7 +19,7 @@ setup(
     zip_safe=True,
     maintainer='avaz',
     maintainer_email='AvaZahedi2023@u.northwestern.edu',
-    description='TODO: Package description',
+    description='Hand gesture recognition in ROS2 for communicating gesture-based data.',
     license='MIT',
     tests_require=['pytest'],
     entry_points={

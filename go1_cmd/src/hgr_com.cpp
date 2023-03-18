@@ -46,7 +46,6 @@ class HGRCom : public rclcpp::Node
       // timer
       timer_ = create_wall_timer(
         std::chrono::milliseconds(50), std::bind(&HGRCom::timer_callback, this));
-        // previously 5ms
       
       RCLCPP_INFO_STREAM(get_logger(), "Waiting...");
     }

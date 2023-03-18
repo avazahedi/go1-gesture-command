@@ -2,11 +2,14 @@
 
 This repository contains two ROS2 packages for using hand gestures to send motion commands to the Unitree Go1:
 - ros2_hgr
-    * A ROS2 Python package with code forked from [Kinivi's hand-gesture-recognition-using-mediapipe repository](https://github.com/kinivi/hand-gesture-recognition-mediapipe) that uses computer vision, Mediapipe, and a machine learning model to detect 8 different hand gestures.
+    * A ROS2 Python package with code forked from [kinivi's hand-gesture-recognition-using-mediapipe repository](https://github.com/kinivi/hand-gesture-recognition-mediapipe) that uses computer vision, Mediapipe, and a machine learning model to detect 8 different hand gestures.
 - go1_cmd
     * A ROS2 C++ package that receives hand gesture data and utilizes services to send commands to the Go1 accordingly. 
 
 https://user-images.githubusercontent.com/39091881/226065629-1f51c5ee-e34e-41f8-ba0c-dff40174ed21.mp4
+
+## How It Works
+Google's MediaPipe is an open-source framework with machine learning solutions, including hand detection, face detection, and more. Here, I use MediaPipe to detect my hands, and I use a TensorFlow model kinivi's repository to classify the gesture I am making. 
 
 ## Dependencies
 You can import the necessary repositories listed in `go1_hgr.repos` into your workspace using vcs. To do so, clone this repository into the src directory of your workspace. Then in the root of your workspace, run the following:  
@@ -28,7 +31,7 @@ To launch using an external RealSense camera instead of a built-in webcam, use
 
 ## Gestures Guide
 0. Open - stop
-1. Close - 0&deg; yaw orietnation (normal)
+1. Close - look forward (normal 0&deg; yaw)
 2. Pointer - recover stand up
 3. OK - look up
 4. Peace - look down
@@ -39,4 +42,4 @@ To launch using an external RealSense camera instead of a built-in webcam, use
 https://user-images.githubusercontent.com/39091881/226063735-aaa51c78-5556-4b36-a2dd-72c2382e86d3.mp4
 
 ## Notes
-If you wish to do additional data training and logging, you will have to change the path in line 25 of hgr_node.py or line 29 of hgr_node_cam.py, depending on if you are using the built-in webcam or RealSense, respectively. 
+This project would not have been possible without the help of Katie Hughes, Nick Morales, and Marno Nel, who I worked with throughout the Go1 disassembly and upgrades that were necessary to work with the Go1 and make this project and their projects possible. 

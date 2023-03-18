@@ -2,8 +2,8 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ros2_hgr</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <version>0.0.1</version>
+  <description>Hand gesture recognition in ROS2 for communicating gesture-based data.</description>
   <maintainer email="AvaZahedi2023@u.northwestern.edu">avaz</maintainer>
   <license>MIT</license>
 
