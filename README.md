@@ -54,4 +54,6 @@ To launch using an external RealSense camera instead of a built-in webcam, use
 https://user-images.githubusercontent.com/39091881/226063735-aaa51c78-5556-4b36-a2dd-72c2382e86d3.mp4
 
 ## Notes
-This project would not have been possible without the help of Katie Hughes, Nick Morales, Marno Nel, and Professor Matt Elwin, who I worked with throughout the Go1 disassembly and upgrades that were necessary to work with the Go1 and make this project and the other students' projects possible. 
+This project would not have been possible without the help of Katie Hughes, Nick Morales, Marno Nel, and Professor Matt Elwin, who I worked with throughout the Go1 disassembly and upgrades that were necessary to work with the Go1 and make this project and the other students' projects possible.  
+
+Check out my portfolio post on this project [here](https://avazahedi.github.io/projects/02-hgr-go1).
