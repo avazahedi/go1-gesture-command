@@ -39,7 +39,10 @@ Other dependencies include:
 * The `use_realsense` launch argument defaults to false and can be used for a similar but separate hgr_node specifically for the RealSense.
 
 To launch using an external RealSense camera instead of a built-in webcam, use  
-`ros2 launch ros2_hgr hgr.launch.xml use_realsense:=true`
+`ros2 launch ros2_hgr hgr.launch.xml use_realsense:=true`  
+
+You can also launch using the cameras onboard of the Go1 with  
+`ros2 launch ros2_hgr hgr.launch.xml dogcam:=true`
 
 ## Gestures Guide
 0. Open - stop
