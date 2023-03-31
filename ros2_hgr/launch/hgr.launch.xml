@@ -2,6 +2,7 @@
 
   <arg name="path_prefix" default="$(find-pkg-share ros2_hgr)/"/>
   <arg name="use_realsense" default="false" />
+  <arg name="dogcam" default="false" />
 
   <include file="$(find-pkg-share realsense2_camera)/launch/rs_launch.py" if="$(eval '\'$(var use_realsense)\' == \'true\'')">
     <arg name="enable_depth" value="false" />
@@ -15,7 +16,11 @@
     <param name="path_prefix1" value="$(var path_prefix)" />
   </node>
 
-  <node name="hgr_node" pkg="ros2_hgr" exec="hgr_node" if="$(eval '\'$(var use_realsense)\' == \'false\'')">
+  <node name="hgr_node_dogcam" pkg="ros2_hgr" exec="hgr_node_dogcam" if="$(eval '\'$(var dogcam)\'')">
+    <param name="path_prefix1" value="$(var path_prefix)" />
+  </node>
+
+  <node name="hgr_node" pkg="ros2_hgr" exec="hgr_node" if="$(eval '\'$(var use_realsense)\' == \'false\' and \'$(var dogcam)\' == \'false\' ')">
     <param name="path_prefix1" value="$(var path_prefix)" />
   </node>
 
